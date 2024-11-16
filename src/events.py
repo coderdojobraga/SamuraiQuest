@@ -115,7 +115,7 @@ async def handle_dm(client, message, guild_id, channel_ids):
             else:
                 await message.author.send("O nível do desafio está fora dos níveis disponíveis. Por favor, verifica e tenta novamente.")
         else:
-            await message.author.send("O formato da mensagem está incorreto. Por favor, segue o formato: '```Linguagem - Desafio Nível\nConteúdo```'.")
+            await message.author.send("O formato da mensagem está incorreto. Por favor, segue o formato: ```Linguagem - Desafio Nível\nConteúdo```")
 
 async def handle_public_message(client, message, guild_id, channel_ids):
     guild = client.get_guild(guild_id)
