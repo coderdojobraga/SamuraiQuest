@@ -57,14 +57,15 @@ async def update_participants_message(client, payload, channel_ids, message_ids)
 
     channel = client.get_channel(payload.channel_id)
     message = await channel.fetch_message(payload.message_id)
-    correct_pattern = re.match(r'^(Scratch|Python)\s(<@\d{17,19}>)', message.content)
+    correct_pattern = re.match(r'^(Scratch|Python)\s-\sDesafio\s(\d+)\s(<@\d{17,19}>)', message.content)
     if correct_pattern:
         language = correct_pattern.group(1)
-        participant = correct_pattern.group(2)
+        level = int(correct_pattern.group(2))
+        participant = correct_pattern.group(3)
 
-        scratch_section, python_section = extract_sections(participants_message.content)
-        if (language == "Scratch" and participant not in scratch_section) or (language == "Python" and participant not in python_section):
-            updated_message = update_message(participants_message.content, participant, language)
+        scratch_level_1, scratch_level_2, scratch_level_3, python_level_1, python_level_2 = extract_sections(participants_message.content)
+        if (language == "Scratch" and level in [1, 2, 3] and participant not in locals()[f'scratch_level_{level}']) or (language == "Python" and level in [1, 2] and participant not in locals()[f'python_level_{level}']):
+            updated_message = update_message(participants_message.content, participant, language, level)
             await participants_message.edit(content=updated_message)
             print(f'Participants message updated with new content: {updated_message}')
 
@@ -76,12 +77,19 @@ async def handle_dm(client, message, guild_id, channel_ids):
         return
 
     if discord.utils.get(author.roles, name='Ninjas'):
-        correct_pattern = re.match(r'^([sS]cratch|[Pp]ython)\s*-\s*Desafio\s\d+\s*\n(.*)', message.content)
+        correct_pattern = re.match(r'^([sS]cratch|[Pp]ython)\s*-\s*Desafio\s(\d+)\s*\n(.*)', message.content)
         if correct_pattern:
             language = (correct_pattern.group(1))[0].upper() + (correct_pattern.group(1))[1:]
-            message_content = correct_pattern.group(2)
-            submissions_channel = client.get_channel(channel_ids['submissions'])
-            await submissions_channel.send(f"{language} <@{author.id}> {message_content}")
+            level = int(correct_pattern.group(2))
+            message_content = correct_pattern.group(3)
+            if (language == "Scratch" and level in [1, 2, 3]) or (language == "Python" and level in [1, 2]):
+                submissions_channel = client.get_channel(channel_ids['submissions'])
+                await submissions_channel.send(f"{language} - Desafio {level} <@{author.id}> {message_content}")
+                await message.author.send("A tua submissão foi recebida com sucesso e será validada em breve.")
+            else:
+                await message.author.send("O nível do desafio está fora dos níveis disponíveis. Por favor, verifique e tente novamente.")
+        else:
+            await message.author.send("O formato da mensagem está incorreto. Por favor, siga o formato: 'Linguagem - Desafio Nível\nConteúdo'.")
 
 async def handle_public_message(client, message, guild_id, channel_ids):
     guild = client.get_guild(guild_id)
