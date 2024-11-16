@@ -15,8 +15,34 @@ async def handle_reaction(client, payload, add, react_roles, channel_ids, messag
     if emoji in react_roles:
         await handle_reaction_roles(client, payload, add, react_roles)
 
-    if add and payload.channel_id == channel_ids['submissions'] and emoji == "✅":
-        await update_participants_message(client, payload, channel_ids, message_ids)
+    if add and payload.channel_id == channel_ids['submissions']:
+        if emoji == "✅":
+            await update_participants_message(client, payload, channel_ids, message_ids)
+        elif emoji == "❌":
+            await create_support_thread(client, payload, channel_ids)
+
+async def create_support_thread(client, payload, channel_ids):
+    support_channel = client.get_channel(channel_ids['support'])
+    if support_channel:
+        try:
+            message = await client.get_channel(payload.channel_id).fetch_message(payload.message_id)
+            if message:
+                # Extract the challenge information and mention
+                correct_pattern = re.match(r'^(Scratch|Python)\s-\sDesafio\s(\d+)\s(<@\d{17,19}>)', message.content)
+                if correct_pattern:
+                    challenge_info = f"{correct_pattern.group(1)} - Desafio {correct_pattern.group(2)} {correct_pattern.group(3)}"
+                    support_message = await support_channel.send(content=challenge_info)
+                    thread = await support_message.create_thread(name=f"Ajuda para {message.author.display_name}")
+                    await thread.send(f"Olá, parece que precisas de ajuda com o teu desafio. Por favor, descreve a tua dúvida aqui.")
+                    print(f"Support thread created for {message.author.display_name}.")
+                else:
+                    print(f"Message content does not match the expected pattern.")
+            else:
+                print(f"Message with ID {payload.message_id} not found.")
+        except discord.errors.NotFound:
+            print(f"Message with ID {payload.message_id} not found.")
+        except discord.errors.HTTPException as e:
+            print(f"Failed to create thread: {e}")
 
 async def handle_reaction_roles(client, payload, add, react_roles):
     guild = client.get_guild(payload.guild_id)
@@ -85,11 +111,11 @@ async def handle_dm(client, message, guild_id, channel_ids):
             if (language == "Scratch" and level in [1, 2, 3]) or (language == "Python" and level in [1, 2]):
                 submissions_channel = client.get_channel(channel_ids['submissions'])
                 await submissions_channel.send(f"{language} - Desafio {level} <@{author.id}> {message_content}")
-                await message.author.send("A tua submissão foi recebida com sucesso e será validada em breve.")
+                await message.author.send("A tua submiss��o foi recebida com sucesso e será validada em breve.")
             else:
-                await message.author.send("O nível do desafio está fora dos níveis disponíveis. Por favor, verifique e tente novamente.")
+                await message.author.send("O nível do desafio está fora dos níveis disponíveis. Por favor, verifica e tenta novamente.")
         else:
-            await message.author.send("O formato da mensagem está incorreto. Por favor, siga o formato: 'Linguagem - Desafio Nível\nConteúdo'.")
+            await message.author.send("O formato da mensagem está incorreto. Por favor, segue o formato: '```Linguagem - Desafio Nível\nConteúdo```'.")
 
 async def handle_public_message(client, message, guild_id, channel_ids):
     guild = client.get_guild(guild_id)
