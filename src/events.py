@@ -111,7 +111,7 @@ async def handle_dm(client, message, guild_id, channel_ids):
             if (language == "Scratch" and level in [1, 2, 3]) or (language == "Python" and level in [1, 2]):
                 submissions_channel = client.get_channel(channel_ids['submissions'])
                 await submissions_channel.send(f"{language} - Desafio {level} <@{author.id}> {message_content}")
-                await message.author.send("A tua submiss��o foi recebida com sucesso e será validada em breve.")
+                await message.author.send("A tua submissão foi recebida com sucesso e será validada em breve.")
             else:
                 await message.author.send("O nível do desafio está fora dos níveis disponíveis. Por favor, verifica e tenta novamente.")
         else:
