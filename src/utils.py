@@ -1,5 +1,8 @@
 import re
 from datetime import datetime, timedelta
+import asyncio
+import aiofiles
+import os
 
 def extract_sections(message):
     match = re.search(r'# Semana \d{2}\/\d{2}\/\d{4} - \d{2}\/\d{2}\/\d{4}\n*(## 😺 Scratch Nível 1\n*(✅ <@\d+>\n*)*)\n*(## 😺 Scratch Nível 2\n*(✅ <@\d+>\n*)*)\n*(## 😺 Scratch Nível 3\n*(✅ <@\d+>\n*)*)\n*(## 🐍 Python Nível 1\n*(✅ <@\d+>\n*)*)\n*(## 🐍 Python Nível 2\n*(✅ <@\d+>\n*)*)', message)
@@ -44,9 +47,34 @@ def update_message(message, user, language, level):
     return updated_message
 
 def create_initial_message():
-    today = datetime.today()
-    start_of_week = today - timedelta(days=today.weekday())
-    end_of_week = start_of_week + timedelta(days=6)
+    start_of_week = datetime.today()
+    end_of_week = start_of_week + timedelta(days=12)
     return (f"# Semana {start_of_week.strftime('%d/%m/%Y')} - {end_of_week.strftime('%d/%m/%Y')}\n"
             "## 😺 Scratch Nível 1\n## 😺 Scratch Nível 2\n## 😺 Scratch Nível 3\n"
             "## 🐍 Python Nível 1\n## 🐍 Python Nível 2\n")
+
+async def schedule_challenges(client, channel_ids, date_time, message_ids):
+    now = datetime.now()
+    delay = (date_time - now).total_seconds()
+    await asyncio.sleep(delay)
+    await send_challenges(client, channel_ids, message_ids)
+
+async def send_challenges(client, channel_ids, message_ids):
+    scratch_channel = client.get_channel(channel_ids['scratch-challenges'])
+    python_channel = client.get_channel(channel_ids['python-challenges'])
+    participants_channel = client.get_channel(channel_ids['participants'])
+
+    # Send challenges
+    for folder, channel in [('scratch', scratch_channel), ('python', python_channel)]:
+        files = sorted(os.listdir(f'{folder}'))
+        for filename in files:
+            if filename.endswith('.md'):
+                async with aiofiles.open(f'{folder}/{filename}', mode='r') as file:
+                    content = await file.read()
+                    await channel.send(content)
+
+    # Send initial participants message
+    initial_message = create_initial_message()
+    participants_message = await participants_channel.send(initial_message)
+    message_ids['participants'] = participants_message.id
+    print(f'Initial participants message sent with ID: {participants_message.id}')

@@ -1,8 +1,10 @@
 # bot.py
 import os
 import discord
+from datetime import datetime
 from dotenv import load_dotenv
 from events import on_ready, on_member_join, handle_reaction, handle_dm, handle_public_message
+from utils import schedule_challenges
 
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
@@ -70,6 +72,9 @@ class MyClient(discord.Client):
             )
             await introduction_channel.send(introduction_message)
             print('Introduction message sent.')
+
+        schedule_time = datetime(2024, 11, 17, 11, 00)
+        self.loop.create_task(schedule_challenges(self, channel_ids, schedule_time, message_ids))
 
     async def on_member_join(self, member):
         await on_member_join(self, member, channel_ids)
