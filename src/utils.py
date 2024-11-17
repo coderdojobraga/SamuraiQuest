@@ -56,8 +56,11 @@ def create_initial_message():
 async def schedule_challenges(client, channel_ids, date_time, message_ids):
     now = datetime.now()
     delay = (date_time - now).total_seconds()
-    await asyncio.sleep(delay)
-    await send_challenges(client, channel_ids, message_ids)
+    if delay > 0:
+        await asyncio.sleep(delay)
+        await send_challenges(client, channel_ids, message_ids)
+    else:
+        print("Scheduled time has already passed, skipping sending challenges.")
 
 async def send_challenges(client, channel_ids, message_ids):
     scratch_channel = client.get_channel(channel_ids['scratch-challenges'])

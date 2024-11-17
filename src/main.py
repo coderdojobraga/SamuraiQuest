@@ -74,7 +74,11 @@ class MyClient(discord.Client):
             print('Introduction message sent.')
 
         schedule_time = datetime(2024, 11, 17, 11, 00)
-        self.loop.create_task(schedule_challenges(self, channel_ids, schedule_time, message_ids))
+        now = datetime.now()
+        if now < schedule_time:
+            self.loop.create_task(schedule_challenges(self, channel_ids, schedule_time, message_ids))
+        else:
+            print("Scheduled time has already passed, skipping scheduling.")
 
     async def on_member_join(self, member):
         await on_member_join(self, member, channel_ids)
