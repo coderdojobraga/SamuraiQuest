@@ -8,7 +8,7 @@ async def on_ready(client):
 async def on_member_join(client, member, channel_ids):
     acolhimento_channel = client.get_channel(channel_ids['acolhimento'])
     if acolhimento_channel:
-        await acolhimento_channel.send(f'Bem vindo ao Discord do CoderDojo Braga, {member.mention}!\nPara começares, envia uma mensagem para este canal e diz-nos olá! Diz-nos também o teu primeiro e último nome para sabermos quem és e te darmos acesso ao resto do Discord!')
+        await acolhimento_channel.send(f'Bem vindo ao Discord do CoderDojo Braga, {member.mention}!\nPara começares, envia uma mensagem para este canal e diz-nos olá! Diz-nos também o teu primeiro e último nome, se és ninja, guardião ou voluntário, para sabermos quem és e te darmos acesso ao resto do Discord!')
 
 async def handle_reaction(client, payload, add, react_roles, channel_ids, message_ids):
     emoji = payload.emoji.name
